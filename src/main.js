@@ -22,6 +22,9 @@ const loadCsv = async path => {
     const results = [];
     for (const row of data) {
         const desc = row[descIndex].replace(/[\u2018\u2019]/g, `'`);
+        if (/[^a-z0-9 ]/.test(desc)) {
+            throw new Error(`description has invalid text: ${desc}`);
+        }
         const price = row[priceIndex];
         const size = row[sizeIndex];
         results.push({ desc, price, size });
@@ -31,11 +34,11 @@ const loadCsv = async path => {
 
 const signIn = async (consignerId, password) => {
     const jar = new CookieJar();
-    let response = await axios.request({
+    await axios.request({
         url: 'https://fayetteville.rhealana.com/wixenroll1.asp?expired=1',
         jar,
     });
-    response = await axios.request({
+    const response = await axios.request({
         method: 'POST',
         url: 'https://fayetteville.rhealana.com/wixcheckin31.asp',
         data: querystring.encode({
