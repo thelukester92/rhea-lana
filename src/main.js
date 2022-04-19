@@ -10,7 +10,7 @@ const loadCsv = async path => {
     const descIndex = header.findIndex(x => /description/i.test(x));
     const priceIndex = header.findIndex(x => /price/i.test(x));
     const sizeIndex = header.findIndex(x => /size/i.test(x));
-    if (!descIndex || !priceIndex || !sizeIndex) {
+    if ([descIndex, priceIndex, sizeIndex].find(x => x === undefined)) {
         throw new Error('description, price, and size columns are required');
     }
 
