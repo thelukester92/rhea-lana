@@ -68,7 +68,7 @@ const createItem = async (consignerId, batchId, jar, sessionId, item) => {
     });
     const match = response.data.match(/LAST ITEM NOT ENTERED: ?([^<]*)/i);
     if (match) {
-        console.error(response);
+        console.error(response.data);
         throw new Error(`a failure occurred: ${match[1]}`);
     }
 };
