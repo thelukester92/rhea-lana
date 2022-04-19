@@ -7,6 +7,9 @@
   },
   "dependencies": {
     "axios": "^0.26.1",
-    "csv-parse": "^5.0.4"
+    "axios-cookiejar-support": "^2.0.4",
+    "csv-parse": "^5.0.4",
+    "querystring": "^0.2.1",
+    "tough-cookie": "^4.0.0"
   }
 }

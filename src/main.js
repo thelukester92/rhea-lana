@@ -1,9 +1,14 @@
-const axios = require('axios');
-const fs = require('fs');
-const { parse } = require('csv-parse');
+import axios from 'axios';
+import { wrapper } from 'axios-cookiejar-support';
+import { parse } from 'csv-parse';
+import { readFileSync } from 'fs';
+import { CookieJar } from 'tough-cookie';
+import * as querystring from 'querystring';
+
+wrapper(axios);
 
 const loadCsv = async path => {
-    const buffer = fs.readFileSync(path);
+    const buffer = readFileSync(path);
     const data = await new Promise((resolve, reject) => parse(buffer, (err, records) => err ? reject(err) : resolve(records)));
 
     const header = data.shift();
@@ -22,13 +27,54 @@ const loadCsv = async path => {
     return results;
 };
 
+const signIn = async (consignerId, password) => {
+    const jar = new CookieJar();
+    let response = await axios.request({
+        url: 'https://fayetteville.rhealana.com/wixenroll1.asp?expired=1',
+        jar,
+    });
+    response = await axios.request({
+        method: 'POST',
+        url: 'https://fayetteville.rhealana.com/wixcheckin31.asp',
+        data: querystring.encode({
+            ID: consignerId,
+            Passwork: password,
+            serverName: 'fayetteville.rhealana.com',
+        }),
+        jar,
+    });
+    const match = jar
+        .getCookieStringSync('https://fayetteville.rhealana.com/')
+        .match(/batchsessioncookie=(\d+)/);
+    if (!match) {
+        throw new Error('login failed');
+    }
+    return { jar, sessionId: match[1] };
+};
+
+const createItem = async (consignerId, batchId, item) => {
+    await axios.request({
+        url: 'https://fayetteville.rhealana.com/wixitemadd.asp',
+        params: {
+            consigncode: consignerId,
+            batchnum: batchId, 
+            description: item.desc,
+            size: item.size,
+            price: item.price,
+            halfmark: 'No Dot',
+            batchsessionrequest: 418203849,
+        },
+    });
+};
+
 (async () => {
-    const [path] = process.argv.slice(2);
-    if (!path) {
-        throw new Error('path is required');
+    const [consignerId, password, batchId, path] = process.argv.slice(2);
+    if (!consignerId || !password || !batchId || !path) {
+        throw new Error('consignerId, password, batchId, and path are required');
     }
     const data = await loadCsv(path);
-    console.log(data);
+    const { jar, sessionId } = await signIn(consignerId, password);
+    console.log(jar, sessionId);
     process.exit(0);
 })().catch(err => {
     console.error('an unexpected error occurred', err);
