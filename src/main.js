@@ -21,7 +21,9 @@ const loadCsv = async path => {
 
     const results = [];
     for (const row of data) {
-        const [desc, price, size] = [row[descIndex], row[priceIndex], row[sizeIndex]];
+        const desc = row[descIndex].replace(/[\u2018\u2019]/g, `'`);
+        const price = row[priceIndex];
+        const size = row[sizeIndex];
         results.push({ desc, price, size });
     }
     return results;
@@ -79,6 +81,8 @@ const createItem = async (consignerId, batchId, jar, sessionId, item) => {
         throw new Error('consignerId, password, batchId, and path are required');
     }
     const data = await loadCsv(path);
+    console.log(data);
+    return;
     const { jar, sessionId } = await signIn(consignerId, password);
     for (const [i, item] of data.entries()) {
         if (offset && i < Number(offset)) {
