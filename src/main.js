@@ -83,7 +83,6 @@ const createItem = async (consignerId, batchId, jar, sessionId, item) => {
     for (const [i, item] of data.entries()) {
         console.log(`uploading item ${i + 1} of ${data.length}...`);
         await createItem(consignerId, batchId, jar, sessionId, item);
-        break;
     }
     process.exit(0);
 })().catch(err => {
