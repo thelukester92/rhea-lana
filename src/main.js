@@ -80,7 +80,8 @@ const createItem = async (consignerId, batchId, jar, sessionId, item) => {
     }
     const data = await loadCsv(path);
     const { jar, sessionId } = await signIn(consignerId, password);
-    for (const item of data) {
+    for (const [i, item] of data.entries()) {
+        console.log(`uploading item ${i + 1} of ${data.length}...`);
         await createItem(consignerId, batchId, jar, sessionId, item);
         break;
     }
