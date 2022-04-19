@@ -74,13 +74,16 @@ const createItem = async (consignerId, batchId, jar, sessionId, item) => {
 };
 
 (async () => {
-    const [consignerId, password, batchId, path] = process.argv.slice(2);
+    const [consignerId, password, batchId, path, offset] = process.argv.slice(2);
     if (!consignerId || !password || !batchId || !path) {
         throw new Error('consignerId, password, batchId, and path are required');
     }
     const data = await loadCsv(path);
     const { jar, sessionId } = await signIn(consignerId, password);
     for (const [i, item] of data.entries()) {
+        if (offset && i < Number(offset)) {
+            continue;
+        }
         console.log(`uploading item ${i + 1} of ${data.length}...`);
         await createItem(consignerId, batchId, jar, sessionId, item);
     }
