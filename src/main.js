@@ -80,7 +80,7 @@ const createItem = async (consignerId, batchId, jar, sessionId, item) => {
 
 const updateItem = async (consignerId, batchId, itemId, jar, sessionId, item) => {
     await axios.request({
-        url: 'https://fayetteville.rhealana.com/wixitemadd.asp',
+        url: 'https://fayetteville.rhealana.com/wixitemeditsave.asp',
         params: {
             consigncode: consignerId,
             inventnum: batchId,
@@ -94,6 +94,13 @@ const updateItem = async (consignerId, batchId, itemId, jar, sessionId, item) =>
         },
         jar,
     });
+};
+
+const indexToItemId = (consignerId, index) => {
+    const key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const msb = Math.floor(index / key.length);
+    const lsb = index % key.length;
+    return `${consignerId}${key[msb]}${key[lsb]}`;
 };
 
 (async () => {
