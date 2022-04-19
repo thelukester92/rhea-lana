@@ -52,8 +52,8 @@ const signIn = async (consignerId, password) => {
     return { jar, sessionId: match[1] };
 };
 
-const createItem = async (consignerId, batchId, item) => {
-    await axios.request({
+const createItem = async (consignerId, batchId, jar, sessionId, item) => {
+    const response = await axios.request({
         url: 'https://fayetteville.rhealana.com/wixitemadd.asp',
         params: {
             consigncode: consignerId,
@@ -62,9 +62,15 @@ const createItem = async (consignerId, batchId, item) => {
             size: item.size,
             price: item.price,
             halfmark: 'No Dot',
-            batchsessionrequest: 418203849,
+            batchsessionrequest: sessionId,
         },
+        jar,
     });
+    const match = response.data.match(/LAST ITEM NOT ENTERED: ?([^<]*)/i);
+    if (match) {
+        console.error(response);
+        throw new Error(`a failure occurred: ${match[1]}`);
+    }
 };
 
 (async () => {
@@ -74,7 +80,10 @@ const createItem = async (consignerId, batchId, item) => {
     }
     const data = await loadCsv(path);
     const { jar, sessionId } = await signIn(consignerId, password);
-    console.log(jar, sessionId);
+    for (const item of data) {
+        await createItem(consignerId, batchId, jar, sessionId, item);
+        break;
+    }
     process.exit(0);
 })().catch(err => {
     console.error('an unexpected error occurred', err);
