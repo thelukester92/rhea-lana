@@ -75,19 +75,35 @@ const createItem = async (consignerId, batchId, jar, sessionId, item) => {
     }
 };
 
+const updateItem = async (consignerId, batchId, itemId, jar, sessionId, item) => {
+    await axios.request({
+        url: 'https://fayetteville.rhealana.com/wixitemadd.asp',
+        params: {
+            consigncode: consignerId,
+            inventnum: batchId,
+            itemcode: itemId,
+            description: item.desc,
+            basesize: item.size,
+            addprice: item.price,
+            halfmark: 'No Dot',
+            page: '',
+            batchsessionrequest: sessionId,
+        },
+        jar,
+    });
+};
+
 (async () => {
     const [consignerId, password, batchId, path, offset] = process.argv.slice(2);
     if (!consignerId || !password || !batchId || !path) {
         throw new Error('consignerId, password, batchId, and path are required');
     }
-    const data = await loadCsv(path);
-    console.log(data);
-    return;
+    let data = await loadCsv(path);
+    if (offset) {
+        data = data.slice(Number(offset));
+    }
     const { jar, sessionId } = await signIn(consignerId, password);
     for (const [i, item] of data.entries()) {
-        if (offset && i < Number(offset)) {
-            continue;
-        }
         console.log(`uploading item ${i + 1} of ${data.length}...`);
         await createItem(consignerId, batchId, jar, sessionId, item);
     }
