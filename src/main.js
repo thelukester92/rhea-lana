@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
+import { Command } from 'commander';
 import { parse } from 'csv-parse';
 import { readFileSync } from 'fs';
 import { CookieJar } from 'tough-cookie';
@@ -22,7 +23,7 @@ const loadCsv = async path => {
     const results = [];
     for (const row of data) {
         const desc = row[descIndex].replace(/[\u2018\u2019]/g, `'`);
-        if (/[^a-z0-9 ]/.test(desc)) {
+        if (/[^a-z0-9 '-]/i.test(desc)) {
             throw new Error(`description has invalid text: ${desc}`);
         }
         const price = row[priceIndex];
@@ -103,20 +104,36 @@ const indexToItemId = (consignerId, index) => {
     return `${consignerId}${key[msb]}${key[lsb]}`;
 };
 
-(async () => {
-    const [consignerId, password, batchId, path, offset] = process.argv.slice(2);
-    if (!consignerId || !password || !batchId || !path) {
-        throw new Error('consignerId, password, batchId, and path are required');
+const upload = async (consignerId, password, batchId, filePath, { dryRun, offset }) => {
+    let data = await loadCsv(filePath);
+    if (dryRun) {
+        console.log('===== DRY RUN =====');
     }
-    let data = await loadCsv(path);
     if (offset) {
-        data = data.slice(Number(offset));
+        data = data.slice(offset);
     }
     const { jar, sessionId } = await signIn(consignerId, password);
     for (const [i, item] of data.entries()) {
         console.log(`uploading item ${i + 1} of ${data.length}...`);
-        await createItem(consignerId, batchId, jar, sessionId, item);
+        console.log(`    ${item.desc}, Size ${item.size}, Price $${item.price}`);
+        if (!dryRun) {
+            await createItem(consignerId, batchId, jar, sessionId, item);
+        }
     }
+};
+
+(async () => {
+    const program = new Command();
+    program
+        .command('upload')
+        .argument('<consignerId>')
+        .argument('<password>')
+        .argument('<batchId>')
+        .argument('<filePath>')
+        .option('-n, --offset <offset>', 'number of rows to skip in the file', x => parseInt(x, 10))
+        .option('--dry-run')
+        .action(upload);
+    await program.parseAsync();
     process.exit(0);
 })().catch(err => {
     console.error('an unexpected error occurred', err);
