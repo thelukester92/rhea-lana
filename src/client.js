@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
+import * as querystring from 'querystring';
 import { CookieJar } from 'tough-cookie';
 
 wrapper(axios);
