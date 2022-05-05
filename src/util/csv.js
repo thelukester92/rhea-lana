@@ -23,10 +23,10 @@ export const loadCsv = async path => {
     }
 
     const results = [];
-    for (const row of data) {
+    for (const [i, row] of data.entries()) {
         const desc = row[descIndex].replace(/[\u2018\u2019]/g, `'`);
         if (/[^a-z0-9 '-]/i.test(desc)) {
-            throw new Error(`description has invalid text: ${desc}`);
+            throw new Error(`description on row ${i + 1} has invalid text: ${desc}`);
         }
         const price = row[priceIndex];
         const size = row[sizeIndex];
