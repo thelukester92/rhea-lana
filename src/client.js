@@ -11,6 +11,82 @@ export class RheaLanaClient {
     consignerId = null; // string
     batchId = null; // string
 
+    async createBatch({ firstName, lastName, address, city, state, zip, phone, email, password }) {
+        throw new Error('not ready yet');
+
+        await axios.request({
+            method: 'POST',
+            url: 'https://fayetteville.rhealana.com/wixsignup1a.asp',
+            jar: this.jar,
+            params: {
+                first: firstName,
+                last: lastName,
+                address,
+                city,
+                state,
+                zip,
+                hphone: phone,
+                wphone: '', // intentionally empty
+                email,
+                pass1: password,
+                pass2: password,
+                init: 't59fayi09i', // value from landing page
+                method: '70', // value from landing page
+                volunteer: '0',
+            },
+        });
+
+        // 302 -> GET wixsignup1a.asp (with url params of the entire post body)
+        // somehow get batchnum and consigner id
+        const consignerId = 'XAL';
+        const batchId = '';
+
+        await axios.request({
+            url: 'https://fayetteville.rhealana.com/madmimiconsignor.php',
+            jar: this.jar,
+            params: {
+                batchnum: batchId,
+                rlaborcode: consignerId,
+                thisowneremail: 'ashley@rhealana.com',
+                thisownerfirst: 'Ashley',
+                thisownerlast: 'Shaver',
+                subdomain: 'fayetteville',
+                facebooklink: 'RheaLanasNWA',
+                salename: 'Fayetteville',
+                thisconsignoremail: email,
+                madmimi: 'DONE',
+                thisconsignorfirst: firstName,
+                thisconsignorlast: lastName,
+            },
+        });
+
+        const match = this.jar
+            .getCookieStringSync('https://fayetteville.rhealana.com/')
+            .match(/batchsessioncookie=(\d+)/);
+        if (!match) {
+            throw new Error('failed to fetch batchsessioncookie');
+        }
+        this.sessionId = match[1];
+
+        // 302 -> wixtraining701.asp?batchnum=17TN
+        // maybe skip /wixtraining702.asp?batchnum=17TN
+        // maybe skip /wixtraining703.asp?batchnum=17TN
+        // maybe skip /wixtraining704.asp?batchnum=17TN
+        // maybe skip https://fayetteville.rhealana.com/wixform1a.asp (?batchNum&batchsessionrequest=this.sessionId)
+
+        await axios.request({
+            url: 'https://fayetteville.rhealana.com/wixform1a.asp',
+            jar: this.jar,
+            params: {
+                batchnum: batchId,
+                agree: '1',
+                batchsessionrequest: this.sessionId,
+                donate_default: '0',
+                discount_default: '1',
+            },
+        });
+    }
+
     /**
      * @param {string} consignerId
      * @param {string} password
@@ -21,7 +97,7 @@ export class RheaLanaClient {
             url: 'https://fayetteville.rhealana.com/wixenroll1.asp?expired=1',
             jar: this.jar,
         });
-        const response = await axios.request({
+        await axios.request({
             method: 'POST',
             url: 'https://fayetteville.rhealana.com/wixcheckin31.asp',
             data: querystring.encode({
