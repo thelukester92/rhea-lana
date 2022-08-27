@@ -6,6 +6,8 @@ import { CookieJar } from 'tough-cookie';
 wrapper(axios);
 
 export class RheaLanaClient {
+    location = 'nwa';
+
     jar = new CookieJar();
     sessionId = null; // string
     consignerId = null; // string
@@ -16,7 +18,7 @@ export class RheaLanaClient {
 
         await axios.request({
             method: 'POST',
-            url: 'https://fayetteville.rhealana.com/wixsignup1a.asp',
+            url: `https://${this.location}.rhealana.com/wixsignup1a.asp`,
             jar: this.jar,
             params: {
                 first: firstName,
@@ -42,7 +44,7 @@ export class RheaLanaClient {
         const batchId = '';
 
         await axios.request({
-            url: 'https://fayetteville.rhealana.com/madmimiconsignor.php',
+            url: `https://${this.location}.rhealana.com/madmimiconsignor.php`,
             jar: this.jar,
             params: {
                 batchnum: batchId,
@@ -50,9 +52,9 @@ export class RheaLanaClient {
                 thisowneremail: 'ashley@rhealana.com',
                 thisownerfirst: 'Ashley',
                 thisownerlast: 'Shaver',
-                subdomain: 'fayetteville',
+                subdomain: this.location,
                 facebooklink: 'RheaLanasNWA',
-                salename: 'Fayetteville',
+                salename: this.location,
                 thisconsignoremail: email,
                 madmimi: 'DONE',
                 thisconsignorfirst: firstName,
@@ -61,7 +63,7 @@ export class RheaLanaClient {
         });
 
         const match = this.jar
-            .getCookieStringSync('https://fayetteville.rhealana.com/')
+            .getCookieStringSync(`https://${this.location}.rhealana.com/`)
             .match(/batchsessioncookie=(\d+)/);
         if (!match) {
             throw new Error('failed to fetch batchsessioncookie');
@@ -72,10 +74,10 @@ export class RheaLanaClient {
         // maybe skip /wixtraining702.asp?batchnum=17TN
         // maybe skip /wixtraining703.asp?batchnum=17TN
         // maybe skip /wixtraining704.asp?batchnum=17TN
-        // maybe skip https://fayetteville.rhealana.com/wixform1a.asp (?batchNum&batchsessionrequest=this.sessionId)
+        // maybe skip https://${this.location}.rhealana.com/wixform1a.asp (?batchNum&batchsessionrequest=this.sessionId)
 
         await axios.request({
-            url: 'https://fayetteville.rhealana.com/wixform1a.asp',
+            url: `https://${this.location}.rhealana.com/wixform1a.asp`,
             jar: this.jar,
             params: {
                 batchnum: batchId,
@@ -94,21 +96,21 @@ export class RheaLanaClient {
      */
     async signIn(consignerId, password, batchId) {
         await axios.request({
-            url: 'https://fayetteville.rhealana.com/wixenroll1.asp?expired=1',
+            url: `https://${this.location}.rhealana.com/wixenroll1.asp?expired=1`,
             jar: this.jar,
         });
         await axios.request({
             method: 'POST',
-            url: 'https://fayetteville.rhealana.com/wixcheckin31.asp',
+            url: `https://${this.location}.rhealana.com/wixcheckin31.asp`,
             data: querystring.encode({
                 ID: consignerId,
                 Passwork: password,
-                serverName: 'fayetteville.rhealana.com',
+                serverName: `${this.location}.rhealana.com`,
             }),
             jar: this.jar,
         });
         const match = this.jar
-            .getCookieStringSync('https://fayetteville.rhealana.com/')
+            .getCookieStringSync(`https://${this.location}.rhealana.com/`)
             .match(/batchsessioncookie=(\d+)/);
         if (!match) {
             throw new Error('login failed');
@@ -127,7 +129,7 @@ export class RheaLanaClient {
             throw new Error('not logged in');
         }
         const response = await axios.request({
-            url: 'https://fayetteville.rhealana.com/wixitemadd.asp',
+            url: `https://${this.location}.rhealana.com/wixitemadd.asp`,
             params: {
                 consigncode: this.consignerId,
                 batchnum: this.batchId,
@@ -155,7 +157,7 @@ export class RheaLanaClient {
             throw new Error('not logged in');
         }
         await axios.request({
-            url: 'https://fayetteville.rhealana.com/wixitemeditsave.asp',
+            url: `https://${this.location}.rhealana.com/wixitemeditsave.asp`,
             params: {
                 consigncode: this.consignerId,
                 inventnum: this.batchId,
